@@ -91,7 +91,7 @@ async def register(body: Login):
         )
     username = body.username.lower()
     hashed = bcrypt.hashpw(body.password.encode(), bcrypt.gensalt())
-    query = User.insert().values(username=username, password=hashed)
+    query = User.insert().values(username=username, password=str(hashed))
     await database.execute(query)
     session = await generateSession(username)
     return {'username': username, **session}
