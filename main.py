@@ -19,11 +19,13 @@ async def docs():
     return RedirectResponse("/docs")
 
 app.include_router(heart.router)
+
 app.include_router(
     auth.router,
     prefix="/auth",
     tags=["auth"],
 )
+
 app.include_router(
     posts.router,
     prefix="/post",
