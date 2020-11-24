@@ -104,5 +104,5 @@ async def logout(apiUser: str = Depends(getUserByApiKey)):
 
 
 @router.get('/whoami', response_model=Whoami)
-async def test(apiUser: str = Depends(getUserByApiKey)):
+async def whoami(apiUser: str = Depends(getUserByApiKey)):
     return {"username": apiUser}
