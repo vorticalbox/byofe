@@ -19,7 +19,7 @@ User = sqlalchemy.Table(
     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, unique=True),
     sqlalchemy.Column("username", sqlalchemy.String,
                       nullable=False, index=True, unique=True),
-    sqlalchemy.Column("password", sqlalchemy.String, nullable=False),
+    sqlalchemy.Column("password", sqlalchemy.Binary, nullable=False),
 )
 
 Session = sqlalchemy.Table(

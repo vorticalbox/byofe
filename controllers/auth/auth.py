@@ -72,7 +72,7 @@ async def login(body: Login):
         )
     username = user[0]['username'].lower()
     hashed = user[0]['password']
-    if not bcrypt.checkpw(body.password.encode(), hashed.encode()):
+    if not bcrypt.checkpw(body.password.encode(), hashed):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Incorrect password",
@@ -91,7 +91,7 @@ async def register(body: Login):
         )
     username = body.username.lower()
     hashed = bcrypt.hashpw(body.password.encode(), bcrypt.gensalt())
-    query = User.insert().values(username=username, password=str(hashed))
+    query = User.insert().values(username=username, password=hashed)
     await database.execute(query)
     session = await generateSession(username)
     return {'username': username, **session}
