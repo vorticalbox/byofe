@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from controllers import heart, auth, database, posts
-app = FastAPI()
+app = FastAPI(name='BYOFE', docs_url=None, redoc_url='/docs')
 
 
 @app.on_event("startup")
