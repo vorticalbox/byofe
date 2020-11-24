@@ -4,7 +4,7 @@ import databases
 import sqlalchemy
 load_dotenv()
 
-DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_URL: str = os.getenv('DATABASE_URL') or ''
 
 database = databases.Database(DATABASE_URL)
 metadata = sqlalchemy.MetaData()
