@@ -1,4 +1,4 @@
-from controllers.database import metadata, database
+from controllers.database import metadata, database, Post
 from controllers.auth import getUserByApiKey
 from datetime import datetime
 from fastapi import APIRouter, Depends
@@ -7,16 +7,6 @@ from typing import List
 import sqlalchemy
 
 router = APIRouter()
-
-Post = sqlalchemy.Table(
-    "posts",
-    metadata,
-    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-    sqlalchemy.Column("title", sqlalchemy.String),
-    sqlalchemy.Column("body", sqlalchemy.String),
-    sqlalchemy.Column("username", sqlalchemy.String),
-    sqlalchemy.Column("date", sqlalchemy.TIMESTAMP),
-)
 
 
 class PostBody(BaseModel):

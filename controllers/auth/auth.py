@@ -1,5 +1,5 @@
 
-from controllers.database import metadata, database
+from controllers.database import database, User, Session
 from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, status, Security, Depends
 from fastapi.security.api_key import APIKeyHeader
@@ -27,24 +27,6 @@ class UserClass(BaseModel):
 
 class Whoami(BaseModel):
     username: str
-
-
-User = sqlalchemy.Table(
-    "users",
-    metadata,
-    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-    sqlalchemy.Column("username", sqlalchemy.String),
-    sqlalchemy.Column("password", sqlalchemy.String),
-)
-
-Session = sqlalchemy.Table(
-    "sessions",
-    metadata,
-    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-    sqlalchemy.Column("username", sqlalchemy.String),
-    sqlalchemy.Column("key", sqlalchemy.String),
-    sqlalchemy.Column("expires", sqlalchemy.TIMESTAMP),
-)
 
 
 async def findUser(username: str):
