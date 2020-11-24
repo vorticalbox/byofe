@@ -1,5 +1,6 @@
 aiosqlite==0.16.0
 astroid==2.4.2
+asyncpg==0.21.0
 autopep8==1.5.4
 bcrypt==3.2.0
 cffi==1.14.3
