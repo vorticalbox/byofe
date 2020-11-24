@@ -72,7 +72,7 @@ async def login(body: Login):
         )
     username = user[0]['username'].lower()
     hashed = user[0]['password']
-    if not bcrypt.checkpw(body.password.encode(), hashed):
+    if not bcrypt.checkpw(body.password.encode(), hashed.encode()):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Incorrect password",
