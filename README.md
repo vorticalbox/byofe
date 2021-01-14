@@ -1,5 +1,5 @@
 # byofe
-simple message board
+simple message board - WIP
 
 # Dev
 
