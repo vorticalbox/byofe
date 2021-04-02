@@ -1,1 +1,1 @@
-web: gunicorn -p 8000 -w $(( 2 * `cat /proc/cpuinfo | grep 'core id' | wc -l` + 1 )) -k uvicorn.workers.UvicornWorker main:app
+web: gunicorn -p $PORT -w $(( 2 * `cat /proc/cpuinfo | grep 'core id' | wc -l` + 1 )) -k uvicorn.workers.UvicornWorker main:app
