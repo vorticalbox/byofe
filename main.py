@@ -1,22 +1,15 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
-from controllers import heart, auth, database, posts
-app = FastAPI(name='BYOFE', docs_url=None, redoc_url='/docs')
 
+from controllers import heart, auth, posts
 
-@app.on_event("startup")
-async def startup():
-    await database.database.connect()
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    await database.database.disconnect()
+app = FastAPI(name='BYOFE', docs_url='/docs', version='0.1.0')
 
 
 @app.get("/")
 async def docs():
     return RedirectResponse("/docs")
+
 
 app.include_router(heart.router)
 

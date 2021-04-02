@@ -129,3 +129,6 @@ dmypy.json
 .pyre/
 byofe.db
 .vscode/settings.json
+
+# IDE
+.idea/

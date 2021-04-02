@@ -1,1 +1,1 @@
-from .auth import router, getUserByApiKey
+from .auth import router, get_user_by_apikey
