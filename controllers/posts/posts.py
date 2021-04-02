@@ -10,7 +10,7 @@ from starlette import status
 from controllers.auth import get_user_by_apikey
 from controllers.database import database
 from controllers.events import create_event
-from controllers.helpers.helpers import PydanticObjectId
+from controllers.helpers import PyObjectId
 
 router = APIRouter()
 
@@ -23,7 +23,7 @@ class PostBody(BaseModel):
 
 
 class PostStored(PostBody):
-    id: PydanticObjectId = Field(None, alias='_id')
+    id: PyObjectId = Field(..., alias='_id')
     date: datetime
     username: str
     closed_date: datetime = None
