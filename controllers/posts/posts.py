@@ -3,18 +3,15 @@ from typing import List, Dict
 
 from bson.objectid import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
-from mongotransactions import Transaction
 from pydantic import BaseModel, constr, conint, Field
 from starlette import status
 
 from controllers.auth import get_user_by_apikey
-from controllers.database import database
+from controllers.database import database, client
 from controllers.events import create_event
 from controllers.helpers import PyObjectId
 
 router = APIRouter()
-
-Post = database.get_collection('posts')
 
 
 class PostBody(BaseModel):
@@ -31,37 +28,36 @@ class PostStored(PostBody):
     # down_vote: int = 0
 
 
-def get_posts(skip: int, limit: int):
-    return list(Post.find().sort('date', -1).skip(skip).limit(limit))
+async def get_posts(skip: int, limit: int):
+    c = database.posts.find({'closed_date': {'$eq': None}}).sort('date', -1).skip(skip).limit(limit)
+    posts = []
+    async for doc in c:
+        posts.append(doc)
+    return posts
 
 
 @router.get('/', response_model=List[PostStored])
-def get_posts_handler(skip: conint(gt=-1) = 0, limit: conint(le=100) = 20, _=Depends(get_user_by_apikey)):
-    return get_posts(skip, limit)
-
-
-@router.get('/{_id}', response_model=PostStored)
-def get_post(_id: str, _=Depends(get_user_by_apikey)):
-    return Post.find_one({'_id': ObjectId(_id)})
+async def get_posts_handler(skip: conint(gt=-1) = 0, limit: conint(le=100) = 20, _=Depends(get_user_by_apikey)):
+    return await get_posts(skip, limit)
 
 
 @router.post('/', response_model=PostStored)
-def save_post(post: PostBody, username=Depends(get_user_by_apikey)):
-    trx = Transaction(database)
+async def save_post(post: PostBody, username=Depends(get_user_by_apikey)):
     date = datetime.now()
     post_id = ObjectId()
     post: Dict = PostStored(**{'_id': post_id, 'date': date, 'username': username, **post.dict()}).dict()
-    trx.insert('posts', post)
-    create_event(trx, 'created new post', username, {'post_id': post_id})
-    trx.update('users', {'username': username}, {'$inc': {'posts': 1}})
-    trx.run()
+    async with await client.start_session() as s:
+        async with s.start_transaction():
+            await database.events.insert_one(create_event('created new post', username, {'post_id': post_id}))
+            await database.posts.insert_one(post)
+            await database.users.update_one({'username': username}, {'$inc': {'posts': 1}})
     return {**post, '_id': post_id}
 
 
 # delete
 @router.put('/{_id}', response_model=PostStored)
-def close_post_handler(_id: str, username=Depends(get_user_by_apikey)):
-    post = get_post(_id, username)
+async def close_post_handler(_id: str, username=Depends(get_user_by_apikey)):
+    post = await database.posts.find_one({'_id': ObjectId(_id)})
     if post is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
@@ -70,11 +66,12 @@ def close_post_handler(_id: str, username=Depends(get_user_by_apikey)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="You my not close this post"
         )
-    trx = Transaction(database)
-    create_event(trx, 'post closed', username)
     closed_date = datetime.now()
-    trx.update_one('posts', {'_id': ObjectId(_id)}, {'$set': {'closed_date': closed_date}})
-    trx.run()
+    async with await client.start_session() as s:
+        async with s.start_transaction():
+            await database.events.insert_one(create_event('post closed', username))
+            await database.posts.update_one({{'_id': ObjectId(_id)}}, {'$set': {'closed_date': closed_date}})
+
     return {'closed_date': closed_date, **post}
 
 # vote

@@ -6,13 +6,12 @@ from fastapi import APIRouter, HTTPException, status, Security, Depends
 from fastapi.security.api_key import APIKeyHeader
 from mongotransactions import Transaction
 from pydantic import BaseModel
-from pymongo.collection import Collection
-
-from controllers.database import database
+from controllers.database import database, client
 from controllers.events import create_event
 
-Users: Collection = database.get_collection('users')
-Sessions: Collection = database.get_collection('sessions')
+Users = database['users']
+Sessions = database['sessions']
+Events = database['events']
 
 api_key_header = APIKeyHeader(name='access_token', auto_error=False)
 
@@ -21,7 +20,7 @@ router = APIRouter()
 
 class Session(BaseModel):
     username: str
-    key: str
+    token: str
     expires: datetime
 
 
@@ -42,33 +41,19 @@ class Whoami(BaseModel):
     username: str
 
 
-def find_user(username: str):
-    return Users.find_one({'username': username})
-
-
-def save_user(trx: Transaction, user: UserClass):
-    trx.insert('users', user.dict())
-
-
-def delete_session(trx: Transaction, username: str) -> None:
-    trx.remove('sessions', {'username': username})
-    trx.run()
-
-
-def generate_session(trx: Transaction, username: str):
+def generate_session(username: str):
     key = str(uuid4())
     expires = datetime.now() + timedelta(hours=12)
-    session = {"key": key, "expires": expires, 'username': username}
-    trx.insert('sessions', session)
+    session = {"token": key, "expires": expires, 'username': username}
     return session
 
 
-def find_session(key: str):
-    return Sessions.find_one({'key': key})
+async def find_session(key: str) -> dict:
+    return await Sessions.find_one({'token': key})
 
 
-def get_user_by_apikey(api_key_header: str = Security(api_key_header)):
-    session = find_session(api_key_header)
+async def get_user_by_apikey(api_key_header: str = Security(api_key_header)):
+    session = await find_session(api_key_header)
     if session is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or missing 'access_token' header"
@@ -77,8 +62,8 @@ def get_user_by_apikey(api_key_header: str = Security(api_key_header)):
 
 
 @router.post('/login', response_model=Session)
-def login(body: Login):
-    user = find_user(body.username)
+async def login(body: Login):
+    user = await database.users.find_one({'username': body.username})
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -91,37 +76,42 @@ def login(body: Login):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Incorrect password",
         )
-    trx = Transaction(database)
-    delete_session(trx, username)
-    session = generate_session(trx, username)
-    trx.run()
+    session = generate_session(username)
+    async with await client.start_session() as s:
+        async with s.start_transaction():
+            await Sessions.delete_one({'username': username}, session=s)
+            await Sessions.insert_one(session, session=s)
     return session
 
 
 @router.post('/register', response_model=Session)
-def register(body: Login):
-    user = find_user(body.username)
+async def register(body: Login):
+    user = await database.users.find_one({'username': body.username})
     if user is not None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username taken",
         )
-    trx = Transaction(database)
     username = body.username.lower()
     hashed = bcrypt.hashpw(body.password.encode('utf8'), bcrypt.gensalt())
     user = UserClass(**{'username': username, 'password': hashed.decode()})
-    save_user(trx, user)
-    create_event(trx, 'user logged in', username)
-    session = generate_session(trx, username)
-    trx.run()
+    event = create_event('user created account', username)
+    session = generate_session(username)
+    async with await client.start_session() as s:
+        async with s.start_transaction():
+            await Events.insert_one(event, session=s)
+            await Users.insert_one(user.dict(), session=s)
+            await Sessions.delete_one({'username': username}, session=s)
+            await Sessions.insert_one(session, session=s)
     return {'username': username, **session}
 
 
 @router.delete('/logout')
-def logout(api_user: str = Depends(get_user_by_apikey)):
-    trx = Transaction(database)
-    create_event(trx, 'user logged out', api_user)
-    delete_session(trx, api_user)
+async def logout(api_user: str = Depends(get_user_by_apikey)):
+    async with await client.start_session() as s:
+        async with s.start_transaction():
+            await Events.insert_one(create_event('user logged out', api_user), session=s)
+            await Sessions.delete_one({'username': api_user}, session=s)
     return {'message': f'{api_user} logged out'}
 
 

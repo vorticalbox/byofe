@@ -12,7 +12,7 @@ class Event(BaseModel):
     meta: Dict = None
 
 
-def create_event(trx: Transaction, details: str, username: str, meta: Dict = None):
+def create_event(details: str, username: str, meta: Dict = None):
     event = {
         'details': details,
         'date': datetime.now(),
@@ -20,4 +20,4 @@ def create_event(trx: Transaction, details: str, username: str, meta: Dict = Non
     }
     if meta is not None:
         event['meta'] = meta
-    return trx.insert('events', event)
+    return event

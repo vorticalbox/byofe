@@ -1,12 +1,12 @@
 import os
 
 from dotenv import load_dotenv
-from mongotransactions import Database
+import motor.motor_asyncio
 
 load_dotenv()
 
 DATABASE_URL: str = os.getenv('DATABASE_URL', '')
-DATABASE: str = os.getenv('DATABASE', None)
-database = Database(DATABASE_URL)
-if DATABASE is not None:
-    database.set_database(DATABASE)
+DATABASE: str = os.getenv('DATABASE', 'byofe')
+
+client = motor.motor_asyncio.AsyncIOMotorClient(DATABASE_URL)
+database = client[DATABASE]
