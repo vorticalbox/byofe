@@ -4,7 +4,6 @@ from uuid import uuid4
 import bcrypt
 from fastapi import APIRouter, HTTPException, status, Security, Depends
 from fastapi.security.api_key import APIKeyHeader
-from mongotransactions import Transaction
 from pydantic import BaseModel
 from controllers.database import database, client
 from controllers.events import create_event
