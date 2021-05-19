@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 
 from controllers import heart, auth, posts
 
-app = FastAPI(name='BYOFE', docs_url='/docs', version='0.2.0')
+app = FastAPI(name='BYOFE', docs_url='/docs', version='0.2.1')
 
 
 @app.get("/")
