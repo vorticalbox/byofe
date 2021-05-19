@@ -1,7 +1,5 @@
 from datetime import datetime
 from typing import Dict
-
-from mongotransactions import Transaction
 from pydantic import BaseModel
 
 
