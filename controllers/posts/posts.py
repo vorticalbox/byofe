@@ -36,12 +36,12 @@ async def get_posts(skip: int, limit: int):
     return posts
 
 
-@router.get('/', response_model=List[PostStored])
+@router.get('', response_model=List[PostStored])
 async def get_posts_handler(skip: conint(gt=-1) = 0, limit: conint(le=100) = 20, _=Depends(get_user_by_apikey)):
     return await get_posts(skip, limit)
 
 
-@router.post('/', response_model=PostStored)
+@router.post('', response_model=PostStored)
 async def save_post(post: PostBody, username=Depends(get_user_by_apikey)):
     date = datetime.now()
     post_id = ObjectId()

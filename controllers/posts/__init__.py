@@ -1,1 +1,1 @@
-from .posts import router
+from .posts import router, PostStored
