@@ -3,12 +3,6 @@ simple message board - WIP
 
 # Dev
 
-create a .env file with a sqlite or postgre uri
-
-```
-DATABASE_URL=sqlite:///./byofe.db
-```
-
 to have the app reload on changes run
 
 ```
