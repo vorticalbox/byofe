@@ -19,28 +19,26 @@ class GDPR(BaseModel):
 router = APIRouter()
 
 
-@router.get('/generate', response_model=GDPR)
+@router.get("/generate", response_model=GDPR)
 async def get_posts_handler(username=Depends(get_user_by_apikey)):
     report = {
-        'posts': [],
-        'comments': [],
-        'events': [],
-        'user': await database.users.find_one({'username': username})
+        "posts": [],
+        "comments": [],
+        "events": [],
+        "user": await database.users.find_one({"username": username}),
     }
-    await database.events.insert_one(create_event('requested gdpr data', username))
-    c = database.posts.find({'username': username}).sort('date', -1)
+    event = create_event("requested gdpr data", username)
+    await database.events.insert_one(event.dict())
+    c = database.posts.find({"username": username}).sort("date", -1)
     async for doc in c:
-        report['posts'].append(doc)
-    c = database.events.find({'username': username}, {'_id': 0}).sort('date', -1)
+        report["posts"].append(doc)
+    c = database.events.find({"username": username}, {"_id": 0}).sort("date", -1)
     async for doc in c:
-        if 'meta' in doc:
+        if "meta" in doc:
             m = {}
-            for k,v in doc.get('meta').items():
+            for k, v in doc.get("meta").items():
                 m[k] = str(v) if ObjectId.is_valid(v) else v
-            doc['meta'] = m
+            doc["meta"] = m
 
-        report['events'].append(doc)
+        report["events"].append(doc)
     return report
-
-
-
