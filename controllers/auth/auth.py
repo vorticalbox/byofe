@@ -97,7 +97,7 @@ async def register(body: Login):
     session = generate_session(username)
     async with await client.start_session() as s:
         async with s.start_transaction():
-            await Events.insert_one(event, session=s)
+            await Events.insert_one(event.dict(), session=s)
             await Users.insert_one(user.dict(), session=s)
             await Sessions.delete_one({"username": username}, session=s)
             await Sessions.insert_one(session, session=s)
