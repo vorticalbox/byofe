@@ -35,7 +35,7 @@ async def get_posts(skip: int, limit: int):
         .skip(skip)
         .limit(limit)
     )
-    return [doc for doc in cursor]
+    return [doc async for doc in cursor]
 
 
 @router.get("", response_model=List[PostStored])
@@ -64,16 +64,18 @@ async def save_post(post: PostBody, username=Depends(get_user_by_apikey)):
 
 
 # delete
-@router.put("/{_id}", response_model=PostStored)
+@router.delete("/{_id}", response_model=PostStored)
 async def close_post_handler(_id: str, username=Depends(get_user_by_apikey)):
-    post = await database.posts.find_one({"_id": ObjectId(_id)})
+    post = await database.posts.find_one(
+        {"_id": ObjectId(_id), "closed_date": {"$eq": None}}
+    )
     if post is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
         )
     if post.get("username", None) != username:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="You my not close this post"
+            status_code=status.HTTP_403_FORBIDDEN, detail="You may not close this post"
         )
     event = create_event("post closed", username)
     closed_date = datetime.now()
@@ -81,7 +83,7 @@ async def close_post_handler(_id: str, username=Depends(get_user_by_apikey)):
         async with s.start_transaction():
             await database.events.insert_one(event.dict())
             await database.posts.update_one(
-                {{"_id": ObjectId(_id)}}, {"$set": {"closed_date": closed_date}}
+                {"_id": ObjectId(_id)}, {"$set": {"closed_date": closed_date}}
             )
 
     return {"closed_date": closed_date, **post}
