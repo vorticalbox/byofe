@@ -12,6 +12,4 @@ class Event(BaseModel):
 
 def create_event(details: str, username: str, meta: Dict = None) -> Event:
     event = Event(details=details, username=username, meta=meta)
-    if meta is not None:
-        event["meta"] = meta
     return event
