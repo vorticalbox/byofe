@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 
 from controllers import heart, auth, posts, gdpr
 
-app = FastAPI(name='BYOFE', docs_url='/docs', version='0.2.5')
+app = FastAPI(name='BYOFE', docs_url='/docs', version='0.3.0')
 
 
 @app.get("/")
@@ -24,9 +24,9 @@ app.include_router(
     prefix="/post",
     tags=["posts"]
 )
-# release once api is complete
-# app.include_router(
-#     gdpr.router,
-#     prefix="/gdpr",
-#     tags=["gdpr"]
-# )
+
+app.include_router(
+    gdpr.router,
+    prefix="/gdpr",
+    tags=["gdpr"]
+)

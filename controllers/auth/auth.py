@@ -73,7 +73,7 @@ async def login(body: Login):
             detail="Incorrect password",
         )
     session = generate_session(username)
-    event = create_event("user logged in", username)
+    event = create_event("user logged in", username, "auth")
     async with await client.start_session() as s:
         async with s.start_transaction():
             await Events.insert_one(event.dict(), session=s)
@@ -93,7 +93,7 @@ async def register(body: Login):
     username = body.username.lower()
     hashed = bcrypt.hashpw(body.password.encode("utf8"), bcrypt.gensalt())
     user = UserClass(**{"username": username, "password": hashed.decode()})
-    event = create_event("user created account", username)
+    event = create_event("user created account", username, "auth")
     session = generate_session(username)
     async with await client.start_session() as s:
         async with s.start_transaction():
@@ -109,7 +109,7 @@ async def logout(username: str = Depends(get_user_by_apikey)):
     async with await client.start_session() as s:
         async with s.start_transaction():
             await Events.insert_one(
-                create_event("user logged out", username), session=s
+                create_event("user logged out", username, "auth"), session=s
             )
             await Sessions.delete_one({"username": username}, session=s)
     return {"message": f"{username} logged out"}

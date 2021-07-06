@@ -8,8 +8,10 @@ class Event(BaseModel):
     date: datetime = datetime.now()
     username: str
     meta: Dict = None
+    controller: str
 
 
-def create_event(details: str, username: str, meta: Dict = None) -> Event:
-    event = Event(details=details, username=username, meta=meta)
-    return event
+def create_event(
+    details: str, username: str, controller: str, meta: Dict = None
+) -> Event:
+    return Event(details=details, username=username, controller=controller, meta=meta)
