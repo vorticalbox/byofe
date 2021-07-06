@@ -10,6 +10,7 @@ from controllers.auth import get_user_by_apikey
 from controllers.database import database, client
 from controllers.events import create_event
 from controllers.helpers import PyObjectId
+from controllers.votes import Votes
 
 router = APIRouter()
 
@@ -25,8 +26,7 @@ class PostStored(PostBody):
     username: str
     closed_date: datetime = None
     updated_at: datetime = None
-    # up_vote: int = 0
-    # down_vote: int = 0
+    votes: Votes = {"up": 0, "down": 0}
 
 
 @router.get("", response_model=List[PostStored])
@@ -34,10 +34,47 @@ async def get_posts(
     skip: conint(gt=-1) = 0, limit: conint(le=100) = 20, _=Depends(get_user_by_apikey)
 ):
     cursor = (
-        database.posts.find({"closed_date": {"$eq": None}})
-        .sort("date", -1)
-        .skip(skip)
-        .limit(limit)
+        database.posts.aggregate(
+            [
+                {"$match": {"closed_date": {"$eq": None}}},
+                {"$skip": skip},
+                {"$limit": limit},
+                {
+                    "$lookup": {
+                        "from": "votes",
+                        "let": {"id": "$_id"},
+                        "pipeline": [
+                            {"$match": {"$expr": {"$eq": ["$$id", "$post_id"]}}},
+                            {"$group": {"_id": "$vote_type", "count": {"$sum": 1.0}}},
+                            {"$project": {"_id": 0.0, "k": "$_id", "v": "$count"}},
+                            {
+                                "$group": {
+                                    "_id": None,
+                                    "data": {"$push": {"k": "$k", "v": "$v"}},
+                                }
+                            },
+                            {"$replaceRoot": {"newRoot": {"$arrayToObject": "$data"}}},
+                        ],
+                        "as": "votes",
+                    }
+                },
+                {
+                    "$project": {
+                        "title": "$title",
+                        "body": "$body",
+                        "date": "$date",
+                        "username": "$username",
+                        "closed_date": "$closed_date",
+                        "updated_at": "$updated_at",
+                        "votes": {"$arrayElemAt": ["$votes", 0]},
+                    }
+                },
+            ]
+        )
+        # database.posts.find()
+        # .sort("date", -1)
+        # .skip(skip)
+        # .limit(limit)
     )
     return [doc async for doc in cursor]
 
@@ -64,9 +101,7 @@ async def save_post(post: PostBody, username=Depends(get_user_by_apikey)):
 async def update_post(body: PostBody, _id: str, username=Depends(get_user_by_apikey)):
     # body = body.dict()
     post_id = ObjectId(_id)
-    post = await database.posts.find_one(
-        {"_id": post_id, "closed_date": {"$eq": None}}
-    )
+    post = await database.posts.find_one({"_id": post_id, "closed_date": {"$eq": None}})
     if post is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
