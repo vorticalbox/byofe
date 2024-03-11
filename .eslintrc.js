@@ -4,6 +4,7 @@ module.exports = {
     jest: true,
   },
   extends: [
+    'airbnb-base',
     'prettier',
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
@@ -57,6 +58,7 @@ module.exports = {
     ],
 
     // import rules
+    'import/prefer-default-export': 'off',
     'import/extensions': [
       'error',
       'ignorePackages',

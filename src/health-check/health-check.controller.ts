@@ -6,6 +6,7 @@ import HealthCheckDto from './health-check.dto';
 @Controller('health-check')
 export class HealthCheckController {
   constructor(private readonly healthService: HealthCheckService) {}
+
   @Get()
   @ApiOkResponse({
     description: 'returns hello world if server is ready to accept requests',
