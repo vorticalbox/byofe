@@ -7,7 +7,7 @@ import { UserDto } from './dto/user.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get()
+  @Get(':username')
   @ApiResponse({
     status: 200,
     description: 'Get user by username',

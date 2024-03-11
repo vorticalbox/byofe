@@ -8,7 +8,7 @@ import { User } from './user.schema';
  * Service class for managing user data.
  */
 export class UserService {
-  constructor(@InjectModel(User.name) private catModel: Model<User>) {}
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   /**
    * Find a user by their username.
@@ -16,7 +16,7 @@ export class UserService {
    * @returns {User|null} A promise that resolves to the found user, or undefined if not found.
    */
   findByUsername(username: string): Promise<User | null> {
-    return this.catModel.findOne({ username }).exec();
+    return this.userModel.findOne({ username }).exec();
   }
 }
 export default UserService;
