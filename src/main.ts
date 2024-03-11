@@ -5,7 +5,7 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 /**
- *
+ * Bootstraps the application.
  */
 async function bootstrap(): Promise<void> {
   const logger = new Logger('bootstrap');
