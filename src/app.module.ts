@@ -7,6 +7,8 @@ import databaseConfig from './database.config';
 import { HealthCheckModule } from './health-check/health-check.module';
 import { UserModule } from './user/user.module';
 import { RegisterModule } from './register/register.module';
+import { LoginModule } from './login/login.module';
+import { SessionModule } from './session/session.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { RegisterModule } from './register/register.module';
     HealthCheckModule,
     UserModule,
     RegisterModule,
+    LoginModule,
+    SessionModule,
   ],
   controllers: [],
   providers: [],

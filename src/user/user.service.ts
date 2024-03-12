@@ -3,7 +3,7 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import { User } from './user.schema';
+import { User, UserDocumentLean } from './user.schema';
 
 @Injectable()
 /**
@@ -20,8 +20,8 @@ export class UserService {
    * @param {string} username - The username of the user to find.
    * @returns {User|null} A promise that resolves to the found user, or undefined if not found.
    */
-  findByUsername(username: string): Promise<User | null> {
-    return this.userModel.findOne({ username }).exec();
+  findByUsername(username: string): Promise<UserDocumentLean | null> {
+    return this.userModel.findOne({ username }).lean().exec();
   }
 
   /**

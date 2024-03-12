@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { FlattenMaps, HydratedDocument, Types } from 'mongoose';
 
 @Schema()
 export class User {
@@ -22,4 +22,5 @@ export class User {
   votes: number;
 }
 export type UserDocument = HydratedDocument<User>;
+export type UserDocumentLean = FlattenMaps<User> & { _id: Types.ObjectId };
 export const UserSchema = SchemaFactory.createForClass(User);
