@@ -26,7 +26,10 @@ async function bootstrap(): Promise<void> {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
-  await app.listen(configService.get('app.port'));
+  await app.listen(
+    configService.get('app.port'),
+    configService.get('app.host'),
+  );
   logger.log(`Environment: ${configService.get<string>('app.environment')}`);
   const url = `${configService.get<string>(
     'app.protocol',
