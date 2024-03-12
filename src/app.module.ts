@@ -6,6 +6,7 @@ import appConfig from './app.config';
 import databaseConfig from './database.config';
 import { HealthCheckModule } from './health-check/health-check.module';
 import { UserModule } from './user/user.module';
+import { RegisterModule } from './register/register.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { UserModule } from './user/user.module';
     }),
     HealthCheckModule,
     UserModule,
+    RegisterModule,
   ],
   controllers: [],
   providers: [],

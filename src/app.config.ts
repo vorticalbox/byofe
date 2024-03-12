@@ -7,4 +7,5 @@ export default registerAs('app', () => ({
   logLevel: process.env.LOG_LEVEL || 'debug', // 'verbose' / 'debug' / 'log' / 'warn' / 'error' / 'silent'
   port: Number.parseInt(process.env.PORT, 10) || 8080,
   protocol: process.env.HTTP_PROTOCOL || 'http',
+  saltRounds: Number.parseInt(process.env.SALT_ROUNDS, 10) || 15,
 }));
