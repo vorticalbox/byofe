@@ -9,6 +9,7 @@ import { UserModule } from './user/user.module';
 import { RegisterModule } from './register/register.module';
 import { LoginModule } from './login/login.module';
 import { SessionModule } from './session/session.module';
+import { EventModule } from './event/event.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { SessionModule } from './session/session.module';
     RegisterModule,
     LoginModule,
     SessionModule,
+    EventModule,
   ],
   controllers: [],
   providers: [],

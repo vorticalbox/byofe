@@ -1,11 +1,19 @@
 import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiBody } from '@nestjs/swagger';
+import mongoose, { Types } from 'mongoose';
+import { InjectConnection } from '@nestjs/mongoose';
+
 import UserService from '../user/user.service';
 import { RegisterDTO } from './register.dto';
+import { EventService } from '../event/event.service';
 
 @Controller('register')
 export class RegisterController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly eventService: EventService,
+    @InjectConnection() private readonly connection: mongoose.Connection,
+  ) {}
 
   @Post()
   @ApiBody({ type: RegisterDTO })
@@ -15,6 +23,11 @@ export class RegisterController {
     if (user) {
       throw new BadRequestException('User already exists');
     }
-    await this.userService.createUser(body.username, body.password);
+    const userId = new Types.ObjectId();
+    const session = await this.connection.startSession();
+    await session.withTransaction(async () => {
+      await this.userService.createUser(userId, body.username, body.password, session);
+      await this.eventService.createRegisterEvent(userId, session);
+    });
   }
 }

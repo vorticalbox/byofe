@@ -1,11 +1,14 @@
-import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiResponse } from '@nestjs/swagger';
-import { LoginService } from './login.service';
+import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
+import { Connection } from 'mongoose';
+import { InjectConnection } from '@nestjs/mongoose';
+
 import UserService from '../user/user.service';
 import { LoginDto } from './login.dto';
-import { SessionService } from '../session/session.service';
+import { LoginService } from './login.service';
 import { SessionDTO } from '../session/session.dto';
-import { SessionDocument } from '../session/session.schema';
+import { SessionService } from '../session/session.service';
+import { EventService } from '../event/event.service';
 
 const InvalidCredentialsMessage = 'Invalid credentials';
 
@@ -15,6 +18,8 @@ export class LoginController {
     private readonly loginService: LoginService,
     private readonly userService: UserService,
     private readonly sessionService: SessionService,
+    private readonly eventService: EventService,
+    @InjectConnection() private readonly connection: Connection,
   ) {}
 
   @Post()
@@ -36,6 +41,10 @@ export class LoginController {
     if (!passwordMatch) {
       throw new BadRequestException(InvalidCredentialsMessage);
     }
-    return this.sessionService.createSession(user._id);
+    const session = await this.connection.startSession();
+    return session.withTransaction(async () => {
+      await this.eventService.createLoginEvent(user._id, session);
+      return this.sessionService.createSession(user._id, session);
+    });
   }
 }
