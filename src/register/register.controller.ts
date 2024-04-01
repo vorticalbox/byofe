@@ -25,8 +25,14 @@ export class RegisterController {
     }
     const userId = new Types.ObjectId();
     const session = await this.connection.startSession();
+    const { username, password } = body;
     await session.withTransaction(async () => {
-      await this.userService.createUser(userId, body.username, body.password, session);
+      await this.userService.createUser({
+        userId,
+        username,
+        password,
+        session,
+      });
       await this.eventService.createRegisterEvent(userId, session);
     });
   }

@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocumentLean } from './user.schema';
+import CreateUser from './types/create-user.type';
 
 @Injectable()
 /**
@@ -32,12 +33,12 @@ export class UserService {
    * @param {ClientSession} session - The session to use for the transaction.
    * @returns {Promise<User>} A promise that resolves to the created user.
    */
-  async createUser(
-    userId: Types.ObjectId,
-    username: string,
-    password: string,
-    session: ClientSession,
-  ): Promise<User> {
+  async createUser({
+    userId,
+    username,
+    password,
+    session,
+  }: CreateUser): Promise<User> {
     const hashedPassword = bcrypt.hashSync(
       password,
       this.configService.get<number>('app.saltRounds'),
