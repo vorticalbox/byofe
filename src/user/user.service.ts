@@ -26,11 +26,12 @@ export class UserService {
   }
 
   /**
-   * Creates a new user with the given username and password.
-   * @param {Types.ObjectId} userId - The ID of the user.
-   * @param {string} username - The username of the user.
-   * @param {string} password - The password of the user.
-   * @param {ClientSession} session - The session to use for the transaction.
+   *  Create a new user.
+   * @param {CreateUser} param - The parameters for creating a user.
+   * @param {Types.ObjectId} param.userId - The ID of the user to create.
+   * @param {string} param.username - The username of the user to create.
+   * @param {string} param.password - The password of the user to create.
+   * @param {ClientSession} param.session - The session to use for the transaction.
    * @returns {Promise<User>} A promise that resolves to the created user.
    */
   async createUser({
