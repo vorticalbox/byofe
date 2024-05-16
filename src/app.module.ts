@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { MongooseModule } from '@nestjs/mongoose';
+import { APP_GUARD } from '@nestjs/core';
 import appConfig from './app.config';
 import databaseConfig from './database.config';
 import { HealthCheckModule } from './health-check/health-check.module';
@@ -10,9 +11,7 @@ import { RegisterModule } from './register/register.module';
 import { LoginModule } from './login/login.module';
 import { SessionModule } from './session/session.module';
 import { EventModule } from './event/event.module';
-import { PostModule } from './post/post.module';
 import { AuthGuard } from './auth.guard';
-import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -35,7 +34,6 @@ import { APP_GUARD } from '@nestjs/core';
     LoginModule,
     SessionModule,
     EventModule,
-    PostModule,
   ],
   controllers: [],
   providers: [
