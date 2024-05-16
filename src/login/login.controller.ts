@@ -9,6 +9,7 @@ import { LoginService } from './login.service';
 import { SessionDTO } from '../session/session.dto';
 import { SessionService } from '../session/session.service';
 import { EventService } from '../event/event.service';
+import { Public } from '../auth.guard';
 
 const InvalidCredentialsMessage = 'Invalid credentials';
 
@@ -23,6 +24,7 @@ export class LoginController {
   ) {}
 
   @Post()
+  @Public()
   @ApiResponse({
     status: 201,
     description: 'Login successful',

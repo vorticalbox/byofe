@@ -20,11 +20,11 @@ async function bootstrap(): Promise<void> {
         configService.get<string>('app.environment') === 'production',
     }),
   );
-  const config = new DocumentBuilder()
+  const swaggerConfig = new DocumentBuilder()
     .setTitle(configService.get('app.name'))
     .setVersion(process.env.npm_package_version)
     .build();
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, document);
   await app.listen(
     configService.get('app.port'),

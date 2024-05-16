@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Model, Types } from 'mongoose';
 import { randomBytes } from 'node:crypto';
-import { Session } from './session.schema';
+import { Session, SessionDocumentLean } from './session.schema';
 import { SessionDTO } from './session.dto';
 
 @Injectable()
@@ -24,5 +24,13 @@ export class SessionService {
       token: loginSession.token,
       createdAt: loginSession.createdAt.toISOString(),
     };
+  }
+
+  async findSessionByToken(token: string): Promise<SessionDocumentLean> {
+    const session = await this.sessionModel.findOne({ token }).lean().exec();
+    if (!session) {
+      return null;
+    }
+    return session;
   }
 }

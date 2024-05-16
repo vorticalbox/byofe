@@ -25,6 +25,10 @@ export class UserService {
     return this.userModel.findOne({ username }).lean().exec();
   }
 
+  findById(id: Types.ObjectId): Promise<UserDocumentLean | null> {
+    return this.userModel.findById(id).lean().exec();
+  }
+
   /**
    *  Create a new user.
    * @param {CreateUser} param - The parameters for creating a user.

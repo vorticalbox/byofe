@@ -2,8 +2,10 @@ import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
 import { ApiNotFoundResponse, ApiResponse } from '@nestjs/swagger';
 import UserService from './user.service';
 import { UserDto } from './dto/user.dto';
+import { Public } from '../auth.guard';
 
 @Controller('user')
+@Public()
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

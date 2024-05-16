@@ -10,6 +10,9 @@ import { RegisterModule } from './register/register.module';
 import { LoginModule } from './login/login.module';
 import { SessionModule } from './session/session.module';
 import { EventModule } from './event/event.module';
+import { PostModule } from './post/post.module';
+import { AuthGuard } from './auth.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -32,8 +35,14 @@ import { EventModule } from './event/event.module';
     LoginModule,
     SessionModule,
     EventModule,
+    PostModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+  ],
 })
 export class AppModule {}
