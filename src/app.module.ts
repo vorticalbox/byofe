@@ -12,6 +12,7 @@ import { LoginModule } from './login/login.module';
 import { SessionModule } from './session/session.module';
 import { EventModule } from './event/event.module';
 import { AuthGuard } from './auth.guard';
+import { ChannelModule } from './channel/channel.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { AuthGuard } from './auth.guard';
     LoginModule,
     SessionModule,
     EventModule,
+    ChannelModule,
   ],
   controllers: [],
   providers: [
