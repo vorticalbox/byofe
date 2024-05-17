@@ -28,6 +28,7 @@ async function bootstrap(): Promise<void> {
   SwaggerModule.setup('docs', app, document);
   await app.listen(
     configService.get('app.port'),
+    configService.get('app.host'),
   );
   logger.log(`Environment: ${configService.get<string>('app.environment')}`);
   const url = `${configService.get<string>(

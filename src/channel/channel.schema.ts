@@ -31,4 +31,4 @@ export type ChannelDocument = HydratedDocument<Channel>;
 export type ChannelDocumentLean = FlattenMaps<Channel> & {
   _id: Types.ObjectId;
 };
-export const UserSchema = SchemaFactory.createForClass(Channel);
+export const ChannelSchema = SchemaFactory.createForClass(Channel);
