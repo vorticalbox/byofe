@@ -1,0 +1,1 @@
+These are generated automatically by swag do not edit manually
