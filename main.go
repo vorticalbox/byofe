@@ -47,7 +47,7 @@ func main() {
 		port = "8080"
 	}
 	var url string
-	if os.Getenv("GO_ENV") == "production" {
+	if os.Getenv("GO_ENV") != "development" {
 		if host == "" {
 			panic("HOST is required in production")
 		}
