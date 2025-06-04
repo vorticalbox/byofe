@@ -47,14 +47,14 @@ func main() {
 		port = "8080"
 	}
 	var url string
-	if os.Getenv("GO_ENV") != "development" {
+	if os.Getenv("GO_ENV") == "development" {
+		url = fmt.Sprintf("http://localhost:%s", port)
+	} else {
 		if host == "" {
 			panic("HOST is required in production")
 		}
 		docs.SwaggerInfo.Host = host
 		url = fmt.Sprintf("https://%s", host)
-	} else {
-		url = fmt.Sprintf("http://localhost:%s", port)
 	}
 	docs.SwaggerInfo.Version = version
 	swaggerUrl := fmt.Sprintf("%s/swagger/doc.json", url)
