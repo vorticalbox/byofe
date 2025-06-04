@@ -4,12 +4,14 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"log"
 	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/vorticalbox/byofe/database"
+	"github.com/vorticalbox/byofe/event"
 	"golang.org/x/crypto/bcrypt"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -29,10 +31,10 @@ type UserAttempts struct {
 }
 
 type UserDocument struct {
-	ID       primitive.ObjectID `json:"_id" bson:"_id"`
-	UserName string             `json:"username" bson:"username"`
-	Password string             `json:"password,omitempty" bson:"password"`
-	Created  Timestamp          `json:"created" bson:"created"`
+	ID        primitive.ObjectID `json:"_id" bson:"_id"`
+	UserName  string             `json:"username" bson:"username"`
+	Password  string             `json:"password,omitempty" bson:"password"`
+	CreatedAt Timestamp          `json:"createdAt" bson:"createdAt"`
 }
 
 type SessionDocument struct {
@@ -40,14 +42,16 @@ type SessionDocument struct {
 	UserID    primitive.ObjectID `json:"userId" bson:"userId"`
 	ApiKey    string             `json:"apiKey" bson:"apiKey"`
 	ExpiresAt Timestamp          `json:"expiresAt" bson:"expiresAt"`
+	EventID   primitive.ObjectID `json:"eventId,omitempty" bson:"eventId,omitempty"`
 }
 
 type AuthService struct {
-	client     *mongo.Client
-	database   *mongo.Database
-	collection *mongo.Collection
-	log        *slog.Logger
-	cache      *ttlcache.Cache[string, UserDocument]
+	client       *mongo.Client
+	database     *mongo.Database
+	collection   *mongo.Collection
+	log          *slog.Logger
+	cache        *ttlcache.Cache[string, UserDocument]
+	eventService event.EventService
 }
 
 func NewAuthService(db *database.DatabaseConnection, log *slog.Logger) AuthService {
@@ -55,12 +59,14 @@ func NewAuthService(db *database.DatabaseConnection, log *slog.Logger) AuthServi
 		ttlcache.WithTTL[string, UserDocument](time.Minute),
 	)
 	go cache.Start()
+	eventService := event.NewEventService(db.Client, db.Database)
 	return AuthService{
-		client:     db.Client,
-		database:   db.Database,
-		collection: db.Database.Collection("users"),
-		log:        log,
-		cache:      cache,
+		client:       db.Client,
+		database:     db.Database,
+		collection:   db.Database.Collection("users"),
+		log:          log,
+		cache:        cache,
+		eventService: eventService,
 	}
 }
 
@@ -90,8 +96,7 @@ func (authService AuthService) FindUserByApiKey(ctx context.Context, apiKey stri
 
 func (authService AuthService) Middleware(next http.Handler) http.Handler {
 	return WrapHandler(func(w http.ResponseWriter, r *http.Request) error {
-		ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
-		defer cancel()
+		ctx := r.Context()
 		apiToken := r.Header.Get("x-access-token")
 		if apiToken == "" {
 			return &ApiError{
@@ -192,22 +197,47 @@ func (authService AuthService) Login() http.HandlerFunc {
 			ApiKey:    "byofe_" + apiKey,              // Implement this function to generate a unique API key
 			ExpiresAt: time.Now().Add(24 * time.Hour), // Set expiration as needed
 		}
+		mongoSession, err := authService.client.StartSession()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer mongoSession.EndSession(ctx)
 		sessionCollection := authService.database.Collection("sessions")
-		// delete all previous sessions for this user
-		_, err = sessionCollection.DeleteMany(ctx, bson.M{"userId": user.ID})
+		_, err = mongoSession.WithTransaction(ctx, func(sessionCtx mongo.SessionContext) (any, error) {
+			event, err := authService.eventService.CreateEvent(sessionCtx, event.EventOts{
+				UserID:      user.ID,
+				Description: "User logged in",
+				Tags:        []string{"login"},
+			})
+			if err != nil {
+				return nil, &ApiError{
+					Status: http.StatusInternalServerError,
+					Msg:    "Failed to create event: " + err.Error(),
+				}
+			}
+			session.EventID = event
+			// delete all previous sessions for this user
+			_, err = sessionCollection.DeleteMany(sessionCtx, bson.M{"userId": user.ID})
+			if err != nil {
+				return nil, &ApiError{
+					Status: http.StatusInternalServerError,
+					Msg:    "Failed to delete previous sessions: " + err.Error(),
+				}
+			}
+			if _, err := sessionCollection.InsertOne(sessionCtx, session); err != nil {
+				return nil, &ApiError{
+					Status: http.StatusInternalServerError,
+					Msg:    "Failed to create session" + err.Error(),
+				}
+			}
+			return nil, nil
+		})
 		if err != nil {
 			return &ApiError{
 				Status: http.StatusInternalServerError,
-				Msg:    "Failed to delete previous sessions: " + err.Error(),
+				Msg:    "Failed to login: " + err.Error(),
 			}
 		}
-		if _, err := sessionCollection.InsertOne(ctx, session); err != nil {
-			return &ApiError{
-				Status: http.StatusInternalServerError,
-				Msg:    "Failed to create session" + err.Error(),
-			}
-		}
-
 		return JsonResponse(w, http.StatusOK, session)
 	}, authService.log)
 }
@@ -261,10 +291,10 @@ func (authService AuthService) Register() http.HandlerFunc {
 			}
 		}
 		newUser := UserDocument{
-			ID:       primitive.NewObjectID(),
-			UserName: registerDTO.UserName,
-			Password: hashedPassword,
-			Created:  time.Now(),
+			ID:        primitive.NewObjectID(),
+			UserName:  registerDTO.UserName,
+			Password:  hashedPassword,
+			CreatedAt: time.Now(),
 		}
 		if _, err := userCollection.InsertOne(ctx, newUser); err != nil {
 			return &ApiError{

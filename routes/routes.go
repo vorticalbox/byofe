@@ -9,8 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func NewRouter(db *database.DatabaseConnection, log *slog.Logger) *chi.Mux {
-	r := chi.NewRouter()
+func NewRouter(r *chi.Mux, db *database.DatabaseConnection, log *slog.Logger) *chi.Mux {
 	heartbeatService := handlers.NewHeartbeatService(db, log)
 	r.Get("/heartbeat", heartbeatService.HeartBeat())
 	authService := handlers.NewAuthService(db, log)
