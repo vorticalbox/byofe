@@ -61,7 +61,7 @@ func main() {
 	routes.NewRouter(r, db, logger)
 	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(swaggerUrl)))
 	r.Get("/swagger", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, fmt.Sprintf("%s/swagger/", url), http.StatusMovedPermanently)
+		http.Redirect(w, r, fmt.Sprintf("%s/swagger/", url), http.StatusOK)
 	})
 	logger.Info(fmt.Sprintf("Listening at %s", url))
 	logger.Info(fmt.Sprintf("APi version: %s", version))
