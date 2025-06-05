@@ -145,7 +145,7 @@ func (authService AuthService) CurrentUser() http.HandlerFunc {
 }
 
 type LoginDTO struct {
-	UserName string `json:"username" validate:"required,min=3,max=32,alphanum"`
+	UserName string `json:"username" validate:"required,min=3,max=32"`
 	Password string `json:"password" validate:"required,min=8,max=64"`
 }
 
@@ -161,8 +161,7 @@ type LoginDTO struct {
 // @Router			/login [post]
 func (authService AuthService) Login() http.HandlerFunc {
 	return WrapHandler(func(w http.ResponseWriter, r *http.Request) error {
-		ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
-		defer cancel()
+		ctx := r.Context()
 		var loginDTO LoginDTO
 		if err := DecodeJSONBody(r, &loginDTO); err != nil {
 			return err
@@ -267,8 +266,7 @@ type RegisterUserDTO struct {
 // @Router			/register [post]
 func (authService AuthService) Register() http.HandlerFunc {
 	return WrapHandler(func(w http.ResponseWriter, r *http.Request) error {
-		ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
-		defer cancel()
+		ctx := r.Context()
 		var registerDTO RegisterUserDTO
 		if err := DecodeJSONBody(r, &registerDTO); err != nil {
 			return err

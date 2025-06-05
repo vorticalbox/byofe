@@ -40,7 +40,7 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(60 * time.Second))
+	r.Use(middleware.Timeout(30 * time.Second))
 	host := os.Getenv("HOST")
 	port := os.Getenv("PORT")
 	if port == "" {
