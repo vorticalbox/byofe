@@ -119,7 +119,7 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Invalid credentials or user not found",
                         "schema": {
                             "$ref": "#/definitions/handlers.ApiError"
                         }

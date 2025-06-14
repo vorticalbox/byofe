@@ -164,11 +164,11 @@ type LoginDTO struct {
 // @Tags			user
 // @Accept			application/json
 // @Produce		application/json
-// @Param			LoginDTO	body	LoginDTO	true	"Login credentials"	{ "username": "exampleUser", "password": "examplePassword123" }
+// @Param			LoginDTO	body	LoginDTO	true	"Login credentials"
 // @Success		200	{object}	SessionDocument "login successful"
-// @Failure		401	{object}	ApiError
-// @Failure		500	{object}	ApiError
+// @Failure		401	{object}	ApiError "Invalid credentials or user not found"
 // @Failure		429	{object}	ApiError
+// @Failure		500	{object}	ApiError
 // @Router			/login [post]
 func (authService AuthService) Login() http.HandlerFunc {
 	return WrapHandler(func(w http.ResponseWriter, r *http.Request) error {
