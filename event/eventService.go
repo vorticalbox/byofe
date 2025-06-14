@@ -1,6 +1,7 @@
 package event
 
 import (
+	"context"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -36,7 +37,7 @@ type EventOts struct {
 	Tags        []string           `json:"tags,omitempty" bson:"tags"`
 }
 
-func (eventService EventService) CreateEvent(sessionCtx mongo.SessionContext, otps EventOts) (primitive.ObjectID, error) {
+func (eventService EventService) CreateEvent(sessionCtx context.Context, otps EventOts) (primitive.ObjectID, error) {
 	eventID := primitive.NewObjectID()
 	EventDocument := EventDocument{
 		ID:          eventID,

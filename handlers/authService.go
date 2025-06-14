@@ -45,6 +45,16 @@ type SessionDocument struct {
 	EventID   primitive.ObjectID `json:"eventId,omitempty" bson:"eventId,omitempty"`
 }
 
+type Attempts struct {
+	ID        primitive.ObjectID `json:"_id" bson:"_id"`
+	UserID    primitive.ObjectID `json:"userId" bson:"userId"`
+	Type      string             `json:"type" bson:"type"` // e.g., "login"
+	Payload   any                `json:"payload,omitempty" bson:"payload,omitempty"`
+	CreatedAt Timestamp          `json:"createdAt" bson:"createdAt"`
+	ExpiresAt Timestamp          `json:"expiresAt" bson:"expiresAt"`
+	EventID   primitive.ObjectID `json:"eventId,omitempty" bson:"eventId,omitempty"`
+}
+
 type AuthService struct {
 	client       *mongo.Client
 	database     *mongo.Database
@@ -168,16 +178,66 @@ func (authService AuthService) Login() http.HandlerFunc {
 		}
 		authService.log.Debug("Login attempt", slog.String("username", loginDTO.UserName))
 		userCollection := authService.database.Collection("users")
+		sessionCollection := authService.database.Collection("sessions")
+		cacheCollection := authService.database.Collection("cache")
+		mongoSession, err := authService.client.StartSession()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer mongoSession.EndSession(ctx)
 		filter := bson.M{"username": loginDTO.UserName}
 		var user UserDocument
-		err := userCollection.FindOne(ctx, filter).Decode(&user)
+		err = userCollection.FindOne(ctx, filter).Decode(&user)
 		if err != nil {
 			return &ApiError{
 				Status: http.StatusUnauthorized,
 				Msg:    "User not found",
 			}
 		}
+		// todo: block login after 5 failed attempts
+		// save a cache document on fail
+		// if the count is more than 5
+		// then rate limit staus code 429
+		attempts, _ := cacheCollection.CountDocuments(ctx, bson.M{
+			"userId": user.ID,
+		})
+		if attempts >= 5 {
+			return &ApiError{
+				Status: http.StatusTooManyRequests,
+				Msg:    "Too many login attempts, please try again later",
+			}
+		}
 		if !Check(loginDTO.Password, user.Password) {
+			_, err = mongoSession.WithTransaction(ctx, func(sessionCtx mongo.SessionContext) (any, error) {
+				eventID, err := authService.eventService.CreateEvent(sessionCtx, event.EventOts{
+					UserID:      user.ID,
+					Description: "Failed login attempt",
+					Tags:        []string{"login", "failed"},
+				})
+				if err != nil {
+					return nil, err
+				}
+				// save new attament document
+				attemptsDoc := Attempts{
+					ID:        primitive.NewObjectID(),
+					UserID:    user.ID,
+					Type:      "login",
+					CreatedAt: time.Now(),
+					ExpiresAt: time.Now().Add(15 * time.Minute),
+					EventID:   eventID,
+				}
+				_, err = cacheCollection.InsertOne(sessionCtx, attemptsDoc)
+				if err != nil {
+					return nil, err
+				}
+				return nil, nil
+			})
+			if err != nil {
+				return &ApiError{
+					Status: http.StatusInternalServerError,
+					Msg:    "Failed to login: " + err.Error(),
+				}
+			}
 			return &ApiError{
 				Status: http.StatusUnauthorized,
 				Msg:    "Invalid password",
@@ -196,12 +256,6 @@ func (authService AuthService) Login() http.HandlerFunc {
 			ApiKey:    "byofe_" + apiKey,              // Implement this function to generate a unique API key
 			ExpiresAt: time.Now().Add(24 * time.Hour), // Set expiration as needed
 		}
-		mongoSession, err := authService.client.StartSession()
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer mongoSession.EndSession(ctx)
-		sessionCollection := authService.database.Collection("sessions")
 		_, err = mongoSession.WithTransaction(ctx, func(sessionCtx mongo.SessionContext) (any, error) {
 			event, err := authService.eventService.CreateEvent(sessionCtx, event.EventOts{
 				UserID:      user.ID,
@@ -209,10 +263,7 @@ func (authService AuthService) Login() http.HandlerFunc {
 				Tags:        []string{"login"},
 			})
 			if err != nil {
-				return nil, &ApiError{
-					Status: http.StatusInternalServerError,
-					Msg:    "Failed to create event: " + err.Error(),
-				}
+				return nil, err
 			}
 			session.EventID = event
 			// delete all previous sessions for this user

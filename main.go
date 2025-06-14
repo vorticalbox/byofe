@@ -18,7 +18,7 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-var version string = "0.0.1"
+var version string = "0.0.2"
 
 // @title						BYOFE
 // @description				Bring Your Own Front End
