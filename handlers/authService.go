@@ -135,8 +135,8 @@ func (authService AuthService) Middleware(next http.Handler) http.Handler {
 // @Security		WithToken
 // @Produce		application/json
 // @Success		200	{object}	UserDocument
-// @Failure		500	{object}	ApiError
 // @Failure		401	{object}	ApiError
+// @Failure		500	{object}	ApiError
 // @Router			/current-user [get]
 func (authService AuthService) CurrentUser() http.HandlerFunc {
 	return WrapHandler(func(w http.ResponseWriter, r *http.Request) error {
@@ -164,10 +164,11 @@ type LoginDTO struct {
 // @Tags			user
 // @Accept			application/json
 // @Produce		application/json
-// @Param			LoginDTO	body	LoginDTO	true	"Login credentials"
-// @Success		200	{object}	SessionDocument
-// @Failure		500	{object}	ApiError
+// @Param			LoginDTO	body	LoginDTO	true	"Login credentials"	{ "username": "exampleUser", "password": "examplePassword123" }
+// @Success		200	{object}	SessionDocument "login successful"
 // @Failure		401	{object}	ApiError
+// @Failure		500	{object}	ApiError
+// @Failure		429	{object}	ApiError
 // @Router			/login [post]
 func (authService AuthService) Login() http.HandlerFunc {
 	return WrapHandler(func(w http.ResponseWriter, r *http.Request) error {
@@ -194,10 +195,6 @@ func (authService AuthService) Login() http.HandlerFunc {
 				Msg:    "User not found",
 			}
 		}
-		// todo: block login after 5 failed attempts
-		// save a cache document on fail
-		// if the count is more than 5
-		// then rate limit staus code 429
 		attempts, _ := cacheCollection.CountDocuments(ctx, bson.M{
 			"userId": user.ID,
 		})
@@ -310,7 +307,7 @@ type RegisterUserDTO struct {
 // @Tags			user
 // @Accept			application/json
 // @Produce		application/json
-// @Param			RegisterUserDTO	body	RegisterUserDTO	true	"User registration details"
+// @Param			RegisterUserDTO	body	RegisterUserDTO	true	"User registration details" { "username": "newUser", "password": "newPassword123" }
 // @Success		200	{object}	UserDocument
 // @Failure		500	{object}	ApiError
 // @Failure		400	{object}	ApiError
