@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "buildId": "3cfecb18b5d12935d18636f57917e93cfd7003d8",
+  "islands": {},
+  "staticFiles": {
+    "/favicon.ico": {
+      "hash": "ceefc31bd51194e03c78f9d35f9ca4d8b474b01280f83cd1490fb96a87c0dd12",
+      "generated": false
+    },
+    "/logo.svg": {
+      "hash": "bf1196aeac0c511ec4b81b846993de208012c4158fba73d17b575236164d63ce",
+      "generated": false
+    },
+    "/_fresh/js/3cfecb18b5d12935d18636f57917e93cfd7003d8/fresh-runtime.js": {
+      "hash": "t+RZY4ee+KU",
+      "generated": true
+    },
+    "/_fresh/js/3cfecb18b5d12935d18636f57917e93cfd7003d8/metafile.json": {
+      "hash": "4cd9e00857de39cabbdb631d9ec4822b2d449934332e36444e43b995970c4dff",
+      "generated": true
+    },
+    "/styles.css": {
+      "hash": "9a560021fef15a0d6fa64d36ea92780ec32a2e3cc36b2280a5aeea2a425d0929",
+      "generated": true
+    }
+  }
+}
