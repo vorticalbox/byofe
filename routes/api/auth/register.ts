@@ -4,6 +4,7 @@ import kv from "$common/database.ts";
 // @deno-types="npm:@types/bcrypt"
 import bcrypt from "npm:bcrypt";
 import { User } from "$types";
+import { userStore } from "$common/stores.ts";
 
 const RegisterSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -21,13 +22,10 @@ export const handler = define.handlers({
         headers: { "Content-Type": "application/json" },
       });
     }
-    // deno-lint-ignore no-unused-vars
-    const { password, ...userData } = data;
-    await kv.set(
-      ["users", data.username],
-      new User(data.username, await bcrypt.hash(data.password, 12)),
-    );
-    return new Response(JSON.stringify(userData), {
+    const hashedPassword = await bcrypt.hash(data.password, 12);
+    const newUser = new User(data.username, hashedPassword);
+    await userStore.create(newUser);
+    return new Response(JSON.stringify(newUser), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });

@@ -1,8 +1,7 @@
 import { App, fsRoutes, staticFiles } from "fresh";
-import {  type State } from "$utils";
+import { type State } from "$utils";
 
 export const app = new App<State>();
-
 app.use(staticFiles());
 
 await fsRoutes(app, {

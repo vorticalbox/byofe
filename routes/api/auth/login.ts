@@ -2,9 +2,9 @@ import * as z from "zod";
 // @deno-types="npm:@types/bcrypt"
 import bcrypt from "npm:bcrypt";
 
-import kv from "$common/database.ts";
 import { define } from "$utils";
-import { Session, User } from "$types";
+import { Session } from "$types";
+import { sessionStore, userStore } from "$common/stores.ts";
 
 const LoginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -14,26 +14,26 @@ const LoginSchema = z.object({
 function generateSessionToken() {
   const randomBytes = new Uint8Array(16);
   crypto.getRandomValues(randomBytes);
-  return "byofe_" + Array.from(randomBytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  return (
+    "byofe_" +
+    Array.from(randomBytes)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("")
+  );
 }
 
 export const handler = define.handlers({
   async POST(ctx) {
     const body = await ctx.req.json();
     const data = LoginSchema.parse(body);
-    const user = await kv.get<User>(["users", data.username]);
-    if (!user.value) {
+    const user = await userStore.read(data.username);
+    if (!user) {
       return new Response(JSON.stringify({ error: "User not found" }), {
         status: 404,
         headers: { "Content-Type": "application/json" },
       });
     }
-    const isValidPassword = await bcrypt.compare(
-      data.password,
-      user.value.password,
-    );
+    const isValidPassword = await bcrypt.compare(data.password, user.password);
     if (!isValidPassword) {
       return new Response(JSON.stringify({ error: "Invalid password" }), {
         status: 401,
@@ -41,20 +41,17 @@ export const handler = define.handlers({
       });
     }
     const sessionToken = generateSessionToken();
-    const session = new Session(
-      sessionToken,
-      user.value.username,
-      3600,
-    );
-    const oldSession = await kv.get<string>(["sessions", user.value.username]);
-    const transactions = kv.atomic()
-      .delete(["sessions", user.value.username])
-      .set(["sessions", sessionToken], session)
-      .set(["sessions", user.value.username], sessionToken);
-    if (oldSession.value) {
-      transactions.delete(["sessions", oldSession.value]);
+    const session = new Session(sessionToken, user.username, 3600);
+    // find the user
+    const existingSession = await sessionStore.read(user.username);
+    const keys = [];
+    if (existingSession) {
+      // if session exists, remove it
+      keys.push(existingSession.token);
+      keys.push(existingSession.username);
     }
-    await transactions.commit();
+    await sessionStore.delete(keys);
+    await sessionStore.create(session);
     return new Response(JSON.stringify(session), {
       status: 200,
       headers: { "Content-Type": "application/json" },
