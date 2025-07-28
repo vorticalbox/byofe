@@ -13,6 +13,7 @@
   },
   "exclude": ["**/_fresh/*"],
   "imports": {
+    "bcryptjs": "npm:bcryptjs@^3.0.2",
     "fresh": "jsr:@fresh/core@^2.0.0-alpha.37",
     "preact": "npm:preact@^10.26.9",
     "@preact/signals": "npm:@preact/signals@^2.2.1",

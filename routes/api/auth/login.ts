@@ -1,6 +1,5 @@
 import * as z from "zod";
-// @deno-types="npm:@types/bcrypt"
-import bcrypt from "npm:bcrypt";
+import bcrypt from "bcryptjs";
 
 import { define } from "$utils";
 import { Session } from "$types";

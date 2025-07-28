@@ -28,6 +28,7 @@
     "npm:@preact/signals@^2.2.1": "2.2.1_preact@10.26.9",
     "npm:autoprefixer@10.4.17": "10.4.17_postcss@8.4.35",
     "npm:bcrypt@*": "6.0.0",
+    "npm:bcryptjs@^3.0.2": "3.0.2",
     "npm:cssnano@6.0.3": "6.0.3_postcss@8.4.35",
     "npm:esbuild-wasm@~0.25.5": "0.25.5",
     "npm:esbuild@~0.25.5": "0.25.5",
@@ -393,6 +394,10 @@
         "node-gyp-build"
       ],
       "scripts": true
+    },
+    "bcryptjs@3.0.2": {
+      "integrity": "sha512-k38b3XOZKv60C4E2hVsXTolJWfkGRMbILBIe2IBITXciy5bOsTKot5kDrf3ZfufQtQOUN5mXceUEpU1rTl9Uog==",
+      "bin": true
     },
     "binary-extensions@2.3.0": {
       "integrity": "sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw=="
@@ -1357,6 +1362,7 @@
       "jsr:@fresh/core@^2.0.0-alpha.37",
       "jsr:@fresh/plugin-tailwind@^0.0.1-alpha.7",
       "npm:@preact/signals@^2.2.1",
+      "npm:bcryptjs@^3.0.2",
       "npm:preact@^10.26.9",
       "npm:tailwindcss@^3.4.3",
       "npm:zod@*"
