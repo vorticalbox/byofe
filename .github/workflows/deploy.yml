@@ -30,7 +30,7 @@ jobs:
         uses: denoland/deployctl@v1
         with:
           project: "byofe"
-          entrypoint: "main.tsx"
+          entrypoint: "main.ts"
           root: "."
           
           
